@@ -19,6 +19,7 @@ public class Wishlist extends Timestamped {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "wishlist_id")
     private Long id;
+    private Integer itemQuantity;
     @OneToOne
     @JoinColumn(name = "user_id")
     private User user;
