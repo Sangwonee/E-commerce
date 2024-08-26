@@ -35,4 +35,8 @@ public class Item extends Timestamped {
         this.stock = itemCreateRequestDto.getStock();
         this.price = itemCreateRequestDto.getPrice();
     }
+
+    public void quantity(OrderItem orderItem){
+        this.stock -= orderItem.getQuantity();
+    }
 }
