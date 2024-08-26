@@ -24,4 +24,8 @@ public class Wishlist extends Timestamped {
     private User user;
     @OneToMany(mappedBy = "wishlist")
     private List<ItemWishlist> itemWishlists = new ArrayList<>();
+
+    public Wishlist(User user) {
+        this.user = user;
+    }
 }

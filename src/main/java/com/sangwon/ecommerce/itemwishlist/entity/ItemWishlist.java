@@ -22,4 +22,9 @@ public class ItemWishlist extends Timestamped {
     @ManyToOne
     @JoinColumn(name = "wishlist_id")
     private Wishlist wishlist;
+
+    public ItemWishlist(Item item, Wishlist wishlist) {
+        this.item = item;
+        this.wishlist = wishlist;
+    }
 }
