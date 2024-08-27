@@ -29,4 +29,8 @@ public class Wishlist extends Timestamped {
     public Wishlist(User user) {
         this.user = user;
     }
+
+    public boolean isEmpty() {
+        return itemWishlists == null || itemWishlists.isEmpty();
+    }
 }

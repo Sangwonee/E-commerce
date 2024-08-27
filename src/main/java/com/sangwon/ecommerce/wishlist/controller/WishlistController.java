@@ -1,7 +1,6 @@
 package com.sangwon.ecommerce.wishlist.controller;
 
-import com.sangwon.ecommerce.wishlist.dto.WishlistRegisterResponseDto;
-import com.sangwon.ecommerce.wishlist.dto.WishlistResponseDto;
+import com.sangwon.ecommerce.wishlist.dto.*;
 import com.sangwon.ecommerce.wishlist.service.WishlistService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,10 +15,18 @@ import java.util.List;
 public class WishlistController {
     private final WishlistService wishlistService;
 
-    @PostMapping("/{itemId}")
-    public ResponseEntity<WishlistRegisterResponseDto> addItemToWishlist(@PathVariable Long itemId, @RequestHeader Long userId) {
-        WishlistRegisterResponseDto wishlistRegisterResponseDto = wishlistService.addItemToWishlist(itemId, userId);
+    @PostMapping
+    public ResponseEntity<WishlistRegisterResponseDto> addItemToWishlist(@RequestBody WishlistRegisterRequestDto wishlistRegisterRequestDto,
+                                                                         @RequestHeader Long userId) {
+        WishlistRegisterResponseDto wishlistRegisterResponseDto = wishlistService.addItemToWishlist(wishlistRegisterRequestDto, userId);
         return new ResponseEntity<>(wishlistRegisterResponseDto, HttpStatus.OK);
+    }
+
+    @PatchMapping
+    public ResponseEntity<WishlistUpdateResponseDto> updateWishlist(@RequestBody WishlistUpdateRequestDto wishlistUpdateRequestDto,
+                                                                    @RequestHeader Long userId) {
+        WishlistUpdateResponseDto wishlistUpdateResponseDto = wishlistService.updateWishlist(wishlistUpdateRequestDto, userId);
+        return new ResponseEntity<>(wishlistUpdateResponseDto, HttpStatus.OK);
     }
 
     @GetMapping

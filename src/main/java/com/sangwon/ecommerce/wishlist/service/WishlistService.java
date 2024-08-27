@@ -6,8 +6,7 @@ import com.sangwon.ecommerce.itemwishlist.entity.ItemWishlist;
 import com.sangwon.ecommerce.itemwishlist.repository.ItemWishlistRepository;
 import com.sangwon.ecommerce.user.entity.User;
 import com.sangwon.ecommerce.user.repository.UserRepository;
-import com.sangwon.ecommerce.wishlist.dto.WishlistRegisterResponseDto;
-import com.sangwon.ecommerce.wishlist.dto.WishlistResponseDto;
+import com.sangwon.ecommerce.wishlist.dto.*;
 import com.sangwon.ecommerce.wishlist.entity.Wishlist;
 import com.sangwon.ecommerce.wishlist.repository.WishlistRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,17 +24,30 @@ public class WishlistService {
     private final ItemWishlistRepository itemWishlistRepository;
 
     @Transactional
-    public WishlistRegisterResponseDto addItemToWishlist(Long itemId, Long userId) {
+    public WishlistRegisterResponseDto addItemToWishlist(WishlistRegisterRequestDto wishlistRegisterRequestDto, Long userId) {
         User user = findByUserId(userId);
-        Item item = findItemById(itemId);
+        Item item = findItemById(wishlistRegisterRequestDto.getItemId());
         Wishlist wishlist = wishlistRepository.findByUser(user).orElse(new Wishlist(user));
         if (wishlist.getId() == null) {
             wishlist = wishlistRepository.save(wishlist);
         }
-        ItemWishlist itemWishlist = new ItemWishlist(item, wishlist);
+        ItemWishlist itemWishlist = new ItemWishlist(wishlistRegisterRequestDto, item, wishlist);
         ItemWishlist savedItemWishlist = itemWishlistRepository.save(itemWishlist);
 
         return new WishlistRegisterResponseDto(savedItemWishlist);
+    }
+
+    @Transactional
+    public WishlistUpdateResponseDto updateWishlist(WishlistUpdateRequestDto wishlistUpdateRequestDto, Long userId) {
+        User user = findByUserId(userId);
+        Wishlist wishlist = wishlistRepository.findByUser(user)
+                .orElseThrow(()->new RuntimeException("Wishlist not found"));
+        ItemWishlist itemWishlist = itemWishlistRepository.findByWishlistAndItemId(wishlist, wishlistUpdateRequestDto.getItemId())
+                .orElseThrow(()->new RuntimeException("ItemWishlist not found"));
+
+        itemWishlist.updateQuantity(wishlistUpdateRequestDto);
+
+        return new WishlistUpdateResponseDto(itemWishlist);
     }
 
     @Transactional(readOnly = true)
@@ -60,10 +72,12 @@ public class WishlistService {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not Found"));
     }
+
     private Wishlist findWishlistByUser(User user) {
         return wishlistRepository.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("Wishlist not found"));
     }
+
     private Item findItemById(Long itemId) {
         return itemRepository.findById(itemId)
                 .orElseThrow(() -> new RuntimeException("Item not Found"));
