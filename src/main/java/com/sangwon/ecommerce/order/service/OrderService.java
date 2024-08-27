@@ -40,17 +40,7 @@ public class OrderService {
             throw new IllegalArgumentException("Wishlist is empty");
         }
 
-        Order order = new Order(user);
-        for (ItemWishlist itemWishlist : wishlist.getItemWishlists()) {
-            Item item = itemWishlist.getItem();
-            Integer quantity = itemWishlist.getItemQuantity();
-
-            item.reduceStock(quantity);
-
-            OrderItem orderItem = new OrderItem(order, item, quantity);
-            order.addOrderItem(orderItem);
-        }
-
+        Order order = createOrderFromWishlist(user, wishlist);
         Order savedOrder = orderRepository.save(order);
 
         itemWishlistRepository.deleteAll(wishlist.getItemWishlists());
@@ -71,8 +61,7 @@ public class OrderService {
             order.cancelOrder();
             restoreStock(order);
             orderRepository.save(order);
-        }
-        else {
+        } else {
             throw new IllegalArgumentException("주문 취소가 불가능합니다.");
         }
     }
@@ -93,6 +82,20 @@ public class OrderService {
     private Order findByOrderId(Long orderId) {
         return orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not Found"));
+    }
+
+    private Order createOrderFromWishlist(User user, Wishlist wishlist) {
+        Order order = new Order(user);
+        for (ItemWishlist itemWishlist : wishlist.getItemWishlists()) {
+            Item item = itemWishlist.getItem();
+            Integer quantity = itemWishlist.getItemQuantity();
+
+            item.reduceStock(quantity);
+
+            OrderItem orderItem = new OrderItem(order, item, quantity);
+            order.addOrderItem(orderItem);
+        }
+        return order;
     }
 
     private void validateRefundConditions(Order order) {
