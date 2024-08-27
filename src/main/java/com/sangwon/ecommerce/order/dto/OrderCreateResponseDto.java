@@ -1,25 +1,33 @@
 package com.sangwon.ecommerce.order.dto;
 
-import com.sangwon.ecommerce.orderitem.entity.OrderItem;
+import com.sangwon.ecommerce.order.entity.Order;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 public class OrderCreateResponseDto {
     private Long orderId;
-    private Long itemId;
-    private Integer quantity;
-    private Integer totalPrice;
-    private String status;
+    private Long userId;
     private LocalDateTime orderDate;
+    private String status;
+    private List<OrderItemResponseDto> orderItems;
+    private Integer totalPrice;
 
-    public OrderCreateResponseDto(OrderItem saveedOrderItem) {
-        this.orderId = saveedOrderItem.getOrder().getId();
-        this.itemId = saveedOrderItem.getItem().getId();
-        this.quantity = saveedOrderItem.getQuantity();
-        this.totalPrice = saveedOrderItem.getTotalPrice();
-        this.status = saveedOrderItem.getOrder().getStatus().toString();
-        this.orderDate = saveedOrderItem.getOrder().getOrderDate();
+    public OrderCreateResponseDto(Order savedOrder) {
+        this.orderId = savedOrder.getId();
+        this.userId = savedOrder.getUser().getId();
+        this.orderDate = savedOrder.getOrderDate();
+        this.status = savedOrder.getStatus().toString();
+        this.orderItems = savedOrder.getOrderItems().stream()
+                .map(OrderItemResponseDto::new).toList();
+        this.totalPrice = calculateTotalPrice(savedOrder);
+    }
+
+    private Integer calculateTotalPrice(Order order) {
+        return order.getOrderItems().stream()
+                .mapToInt(item -> item.getOrderPrice() * item.getQuantity())
+                .sum();
     }
 }

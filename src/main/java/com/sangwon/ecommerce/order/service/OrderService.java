@@ -1,48 +1,62 @@
 package com.sangwon.ecommerce.order.service;
 
 import com.sangwon.ecommerce.item.entity.Item;
-import com.sangwon.ecommerce.item.repository.ItemRepository;
-import com.sangwon.ecommerce.order.dto.OrderCreateRequestDto;
+import com.sangwon.ecommerce.itemwishlist.entity.ItemWishlist;
+import com.sangwon.ecommerce.itemwishlist.repository.ItemWishlistRepository;
 import com.sangwon.ecommerce.order.dto.OrderCreateResponseDto;
 import com.sangwon.ecommerce.order.dto.OrderGetStatusResponseDto;
 import com.sangwon.ecommerce.order.entity.Order;
 import com.sangwon.ecommerce.order.entity.Status;
 import com.sangwon.ecommerce.order.repository.OrderRepository;
 import com.sangwon.ecommerce.orderitem.entity.OrderItem;
-import com.sangwon.ecommerce.orderitem.repository.OrderItemRepository;
 import com.sangwon.ecommerce.user.entity.User;
 import com.sangwon.ecommerce.user.repository.UserRepository;
+import com.sangwon.ecommerce.wishlist.entity.Wishlist;
+import com.sangwon.ecommerce.wishlist.repository.WishlistRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 @Service
 @RequiredArgsConstructor
 public class OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
-    private final ItemRepository itemRepository;
-    private final OrderItemRepository orderItemRepository;
+    private final WishlistRepository wishlistRepository;
+    private final ItemWishlistRepository itemWishlistRepository;
 
     @Transactional
-    public OrderCreateResponseDto createOrder(OrderCreateRequestDto orderCreateRequestDto, Long userId) {
+    public OrderCreateResponseDto createOrder(Long userId) {
         // todo : 재고가 남아있는지 확인한후 주문 가능
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not Found"));
-        Item item = itemRepository.findById(orderCreateRequestDto.getItemId())
-                .orElseThrow(() -> new RuntimeException("Item not found"));
+        Wishlist wishlist = wishlistRepository.findByUser(user)
+                .orElseThrow(() -> new RuntimeException("Wishlist not found"));
+
+        if (wishlist.isEmpty()) {
+            throw new IllegalArgumentException("Wishlist is empty");
+        }
 
         Order order = new Order(user);
+        for (ItemWishlist itemWishlist : wishlist.getItemWishlists()) {
+            Item item = itemWishlist.getItem();
+            Integer quantity = itemWishlist.getItemQuantity();
+
+            item.reduceStock(quantity);
+
+            OrderItem orderItem = new OrderItem(order, item, quantity);
+            order.addOrderItem(orderItem);
+        }
+
         Order savedOrder = orderRepository.save(order);
 
-        OrderItem orderItem = new OrderItem(savedOrder, item, orderCreateRequestDto);
-        OrderItem saveedOrderItem = orderItemRepository.save(orderItem);
+        itemWishlistRepository.deleteAll(wishlist.getItemWishlists());
 
-        item.quantity(saveedOrderItem);
-
-        return new OrderCreateResponseDto(saveedOrderItem);
+        return new OrderCreateResponseDto(savedOrder);
     }
-
 
     @Transactional(readOnly = true)
     public OrderGetStatusResponseDto getOrderStatus(Long orderId) {
@@ -50,25 +64,56 @@ public class OrderService {
         return new OrderGetStatusResponseDto(order);
     }
 
-
-    public void cancel(Long orderId){
+    @Transactional
+    public void cancelOrder(Long orderId) {
         Order order = findByOrderId(orderId);
-        if(order.getStatus() == Status.PENDING){
+        if (order.getStatus() == Status.PENDING) {
             order.cancelOrder();
-            // todo : 취소한 수량 만큼 item 수량 추가해야함
+            restoreStock(order);
+            orderRepository.save(order);
         }
-
+        else {
+            throw new IllegalArgumentException("주문 취소가 불가능합니다.");
+        }
     }
 
-    public void refund(Long orderId){
+    @Transactional
+    public void refundOrder(Long orderId) {
         Order order = findByOrderId(orderId);
-        order.refundOrder();
-    }
+        validateRefundConditions(order);
 
+        order.refundOrder();
+        restoreStock(order);
+
+        order.updateStatus(Status.REFUNDED);
+        orderRepository.save(order);
+    }
 
 
     private Order findByOrderId(Long orderId) {
         return orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not Found"));
+                .orElseThrow(() -> new IllegalArgumentException("Order not Found"));
+    }
+
+    private void validateRefundConditions(Order order) {
+        if (order.getStatus() != Status.DELIVERED) {
+            throw new IllegalArgumentException("반품이 가능한 상태가 아닙니다.");
+        }
+
+        LocalDateTime orderDate = order.getOrderDate();
+        LocalDateTime now = LocalDateTime.now();
+        long daysSinceOrder = ChronoUnit.DAYS.between(orderDate, now);
+
+        if (daysSinceOrder > 3) {
+            throw new IllegalArgumentException("반품 기한이 지나 반품이 불가능합니다.");
+        }
+    }
+
+    private void restoreStock(Order order) {
+        for (OrderItem orderItem : order.getOrderItems()) {
+            Item item = orderItem.getItem();
+            Integer quantity = orderItem.getQuantity();
+            item.addStock(quantity);
+        }
     }
 }

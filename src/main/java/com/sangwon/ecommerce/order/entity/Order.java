@@ -1,12 +1,15 @@
 package com.sangwon.ecommerce.order.entity;
 
 import com.sangwon.ecommerce.global.audi.Timestamped;
+import com.sangwon.ecommerce.orderitem.entity.OrderItem;
 import com.sangwon.ecommerce.user.entity.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -22,6 +25,9 @@ public class Order extends Timestamped {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+
+    @OneToMany(mappedBy = "order")
+    private List<OrderItem> orderItems = new ArrayList<>();
 
     public Order(User user) {
         this.orderDate = LocalDateTime.now();
@@ -39,5 +45,9 @@ public class Order extends Timestamped {
 
     public void refundOrder(){
         this.status = Status.REFUNDED;
+    }
+
+    public void addOrderItem(OrderItem orderItem) {
+        orderItems.add(orderItem);
     }
 }

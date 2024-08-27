@@ -2,7 +2,6 @@ package com.sangwon.ecommerce.orderitem.entity;
 
 import com.sangwon.ecommerce.global.audi.Timestamped;
 import com.sangwon.ecommerce.item.entity.Item;
-import com.sangwon.ecommerce.order.dto.OrderCreateRequestDto;
 import com.sangwon.ecommerce.order.entity.Order;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -18,7 +17,7 @@ public class OrderItem extends Timestamped {
     @Column(name = "order_item_id")
     private Long id;
     private Integer quantity;
-    private Integer totalPrice;
+    private Integer orderPrice;
     @ManyToOne
     @JoinColumn(name = "item_id")
     private Item item;
@@ -26,10 +25,10 @@ public class OrderItem extends Timestamped {
     @JoinColumn(name = "order_id")
     private Order order;
 
-    public OrderItem(Order order, Item item, OrderCreateRequestDto orderCreateRequestDto) {
-        this.quantity = orderCreateRequestDto.getQuantity();
-        this.totalPrice = item.getPrice() * quantity;
-        this.item = item;
+    public OrderItem(Order order, Item item, Integer quantity) {
         this.order = order;
+        this.item = item;
+        this.quantity = quantity;
+        this.orderPrice = item.getPrice() * quantity;
     }
 }

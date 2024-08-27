@@ -1,6 +1,5 @@
 package com.sangwon.ecommerce.order.controller;
 
-import com.sangwon.ecommerce.order.dto.OrderCreateRequestDto;
 import com.sangwon.ecommerce.order.dto.OrderCreateResponseDto;
 import com.sangwon.ecommerce.order.dto.OrderGetStatusResponseDto;
 import com.sangwon.ecommerce.order.service.OrderService;
@@ -16,9 +15,8 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping
-    public ResponseEntity<OrderCreateResponseDto> createOrder(@RequestBody OrderCreateRequestDto orderCreateRequestDto,
-                                                              @RequestHeader Long userId) {
-        OrderCreateResponseDto orderCreateResponseDto = orderService.createOrder(orderCreateRequestDto, userId);
+    public ResponseEntity<OrderCreateResponseDto> createOrder(@RequestHeader Long userId) {
+        OrderCreateResponseDto orderCreateResponseDto = orderService.createOrder(userId);
         return new ResponseEntity<>(orderCreateResponseDto, HttpStatus.CREATED);
     }
 
@@ -30,13 +28,13 @@ public class OrderController {
 
     @PatchMapping("/cancel/{orderId}")
     public ResponseEntity<Void> cancelOrder(@PathVariable Long orderId) {
-        orderService.cancel(orderId);
+        orderService.cancelOrder(orderId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PatchMapping("/refund/{orderId}")
     public ResponseEntity<Void> refundOrder(@PathVariable Long orderId) {
-        orderService.refund(orderId);
+        orderService.refundOrder(orderId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }
