@@ -1,4 +1,4 @@
-package com.sangwon.ecommerce.global.audi;
+package com.sangwon.ecommerce.global.audit;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Temporal;
