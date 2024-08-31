@@ -1,6 +1,6 @@
 package com.sangwon.ecommerce.item.entity;
 
-import com.sangwon.ecommerce.global.audi.Timestamped;
+import com.sangwon.ecommerce.global.audit.Timestamped;
 import com.sangwon.ecommerce.item.dto.ItemCreateRequestDto;
 import com.sangwon.ecommerce.itemwishlist.entity.ItemWishlist;
 import com.sangwon.ecommerce.orderitem.entity.OrderItem;

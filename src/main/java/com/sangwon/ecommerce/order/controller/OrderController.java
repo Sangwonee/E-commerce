@@ -1,11 +1,13 @@
 package com.sangwon.ecommerce.order.controller;
 
+import com.sangwon.ecommerce.global.auth.userdetails.UserDetailsImpl;
 import com.sangwon.ecommerce.order.dto.OrderCreateResponseDto;
 import com.sangwon.ecommerce.order.dto.OrderGetStatusResponseDto;
 import com.sangwon.ecommerce.order.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,7 +17,8 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping
-    public ResponseEntity<OrderCreateResponseDto> createOrder(@RequestHeader Long userId) {
+    public ResponseEntity<OrderCreateResponseDto> createOrder(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        Long userId = userDetails.getUser().getId();
         OrderCreateResponseDto orderCreateResponseDto = orderService.createOrder(userId);
         return new ResponseEntity<>(orderCreateResponseDto, HttpStatus.CREATED);
     }

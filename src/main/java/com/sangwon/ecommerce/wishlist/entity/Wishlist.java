@@ -1,6 +1,6 @@
 package com.sangwon.ecommerce.wishlist.entity;
 
-import com.sangwon.ecommerce.global.audi.Timestamped;
+import com.sangwon.ecommerce.global.audit.Timestamped;
 import com.sangwon.ecommerce.itemwishlist.entity.ItemWishlist;
 import com.sangwon.ecommerce.user.entity.User;
 import jakarta.persistence.*;

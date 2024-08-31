@@ -1,6 +1,6 @@
 package com.sangwon.ecommerce.orderitem.entity;
 
-import com.sangwon.ecommerce.global.audi.Timestamped;
+import com.sangwon.ecommerce.global.audit.Timestamped;
 import com.sangwon.ecommerce.item.entity.Item;
 import com.sangwon.ecommerce.order.entity.Order;
 import jakarta.persistence.*;
