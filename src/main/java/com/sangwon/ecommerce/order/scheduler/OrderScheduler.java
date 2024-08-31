@@ -21,16 +21,31 @@ public class OrderScheduler {
         List<Order> orders = orderRepository.findAll();
 
         for (Order order : orders) {
-            LocalDateTime orderDate = order.getOrderDate();
-            long daysSinceOrder = ChronoUnit.DAYS.between(orderDate, LocalDateTime.now());
-
-            if (daysSinceOrder == 1 && order.getStatus() == Status.PENDING) {
-                order.updateStatus(Status.SHIPPED);
-            } else if (daysSinceOrder == 2 && order.getStatus() == Status.SHIPPED) {
-                order.updateStatus(Status.DELIVERED);
-            }
+            updateOrderStatusBasedOnAge(order);
+            processRefundIfEligible(order);
         }
 
         orderRepository.saveAll(orders);
     }
+
+    // 주문 상태 업데이트 로직
+    private void updateOrderStatusBasedOnAge(Order order) {
+        long daysSinceOrder = ChronoUnit.DAYS.between(order.getOrderDate(), LocalDateTime.now());
+
+        if (daysSinceOrder == 1 && order.getStatus() == Status.PENDING) {
+            order.updateStatus(Status.SHIPPED);
+        } else if (daysSinceOrder == 2 && order.getStatus() == Status.SHIPPED) {
+            order.updateStatus(Status.DELIVERED);
+        }
+    }
+
+    // 반품 처리 로직
+    private void processRefundIfEligible(Order order) {
+        if (order.getStatus() == Status.REFUND_REQUESTED &&
+                order.getRefundDate().plusDays(1).isBefore(LocalDateTime.now())) {
+            order.updateStatus(Status.REFUNDED);
+            order.restoreStock(order);
+        }
+    }
+
 }

@@ -30,7 +30,6 @@ public class OrderService {
 
     @Transactional
     public OrderCreateResponseDto createOrder(Long userId) {
-        // todo : 재고가 남아있는지 확인한후 주문 가능
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not Found"));
         Wishlist wishlist = wishlistRepository.findByUser(user)
@@ -59,7 +58,7 @@ public class OrderService {
         Order order = findByOrderId(orderId);
         if (order.getStatus() == Status.PENDING) {
             order.cancelOrder();
-            restoreStock(order);
+            order.restoreStock(order);
             orderRepository.save(order);
         } else {
             throw new IllegalArgumentException("주문 취소가 불가능합니다.");
@@ -72,9 +71,7 @@ public class OrderService {
         validateRefundConditions(order);
 
         order.refundOrder();
-        restoreStock(order);
 
-        order.updateStatus(Status.REFUNDED);
         orderRepository.save(order);
     }
 
@@ -112,11 +109,5 @@ public class OrderService {
         }
     }
 
-    private void restoreStock(Order order) {
-        for (OrderItem orderItem : order.getOrderItems()) {
-            Item item = orderItem.getItem();
-            Integer quantity = orderItem.getQuantity();
-            item.addStock(quantity);
-        }
-    }
+
 }

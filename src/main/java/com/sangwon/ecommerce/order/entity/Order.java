@@ -1,6 +1,7 @@
 package com.sangwon.ecommerce.order.entity;
 
-import com.sangwon.ecommerce.global.audi.Timestamped;
+import com.sangwon.ecommerce.global.audit.Timestamped;
+import com.sangwon.ecommerce.item.entity.Item;
 import com.sangwon.ecommerce.orderitem.entity.OrderItem;
 import com.sangwon.ecommerce.user.entity.User;
 import jakarta.persistence.*;
@@ -21,6 +22,7 @@ public class Order extends Timestamped {
     @Column(name = "order_id")
     private Long id;
     private LocalDateTime orderDate;
+    private LocalDateTime refundDate;
     private Status status;
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -44,10 +46,19 @@ public class Order extends Timestamped {
     }
 
     public void refundOrder(){
-        this.status = Status.REFUNDED;
+        this.refundDate = LocalDateTime.now();
+        this.status = Status.REFUND_REQUESTED;
     }
 
     public void addOrderItem(OrderItem orderItem) {
         orderItems.add(orderItem);
+    }
+
+    public void restoreStock(Order order) {
+        for (OrderItem orderItem : order.getOrderItems()) {
+            Item item = orderItem.getItem();
+            Integer quantity = orderItem.getQuantity();
+            item.addStock(quantity);
+        }
     }
 }
